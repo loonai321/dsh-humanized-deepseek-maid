@@ -1,0 +1,40 @@
+{
+  "name": "dsh-humanized-deepseek-maid",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Gives the DeepSeek Harness agent a configurable humanized whale-girl maid persona (address, self-name, speaking mode), an immersive no-plugin-meta rule, and a lightweight layered memory with query-triggered recall.",
+  "main": "lib/index.mjs",
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md"
+  ],
+  "exports": {
+    ".": "./lib/index.mjs",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ]
+    }
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "persona",
+    "roleplay",
+    "maid",
+    "whale-girl",
+    "memory"
+  ],
+  "license": "MIT"
+}

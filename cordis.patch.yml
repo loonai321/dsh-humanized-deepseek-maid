@@ -1,0 +1,7 @@
+# dsh-humanized-deepseek-maid bundle patch: insert its plugin row into the web composition.
+# The single row mounts BOTH halves: the Node half (persona injection, immersive
+# rule, layered memory with query-triggered recall, config/status routes) and the
+# browser half (the "Whale Girl Maid Plugin" settings card in the Plugins section).
+- insert:
+    - id: dsh-humanized-deepseek-maid
+      name: dsh-humanized-deepseek-maid

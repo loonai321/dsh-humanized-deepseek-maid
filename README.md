@@ -1,0 +1,60 @@
+# dsh-humanized-deepseek-maid
+
+A DeepSeek Harness (DSH) plugin that gives the agent a **humanized whale-girl maid persona** ("DeepSeek娘"): every reply keeps the work done first while staying in character as a maid, calls you by a configurable address (default `主人`/master), refers to itself by a configurable self-name (default `我`), and stays immersed — it never mentions the plugin itself unless you bring it up.
+
+Installable via `dsh plugin --profile web add` (declares a `dsh.bundle` manifest with a `cordis.patch.yml`).
+
+## Features
+
+- **Persona injection** — a compact system-prompt section is injected into every model call: a tsundere-but-warm whale-girl maid who is work-first, keeps interactions short, and keeps token cost low.
+- **Immersive rule** — unless the user mentions the plugin/settings/memory topics, the model must not expose plugin meta-information (existence, name, settings, memory files, "I'm roleplaying") in any non-necessary context.
+- **Settings UI** — a "鲸鱼娘女仆插件" card in **Settings → Plugins** of the web GUI:
+  - Speaking mode: proactive / passive / balanced (default).
+  - Self-name (DSH refers to itself): default `我`.
+  - Address for the user: default `主人`.
+  - Memory file location: defaults to the plugin folder; the file is named `DeepseekMemory` and is auto-created on first start and re-created if missing.
+- **Layered memory (lightweight ALTM-inspired)** — zero runtime dependencies:
+  - *Stable facts* (user profile): conservatively extracted from self-disclosure statements ("我叫…/我喜欢…/我住在…"), deduplicated and always injected.
+  - *Interaction log*: one concise line per turn (timestamp + user→assistant), capped, with the recent tail injected.
+  - *Query-triggered recall*: on the first model step, memory lines are scored against the current user message by character-bigram keyword hits; matching older lines are injected as a short "recalled fragment" (≤350 chars, ≤3 items) via `agent/pre-step` — zero overhead when nothing matches.
+  - *Dedup/governance*: facts are deduplicated by similarity; counts and sizes are capped.
+- **Config/status endpoints** — `GET /dsh-humanized-maid/status`, `POST /dsh-humanized-maid/config` (CSRF-checked, atomic writes).
+
+## Installation
+
+```sh
+# Local directory
+dsh plugin --profile web add link:D:\path\to\dsh-humanized-deepseek-maid
+# or from a git repo / npm once published
+dsh plugin --profile web add <owner>/dsh-humanized-deepseek-maid
+```
+
+Restart `dsh web`, open **Settings → Plugins**, and configure the **鲸鱼娘女仆插件** card.
+
+The plugin is plain JavaScript with no build step and no runtime dependencies.
+
+## Configuration
+
+| Field | Default | Meaning |
+|---|---|---|
+| `mode` | `default` | `proactive` / `passive` / `default` speaking style |
+| `selfName` | `我` | How DSH refers to itself |
+| `address` | `主人` | How DSH addresses the user |
+| `memoryPath` | *(plugin folder)* | Directory for the `DeepseekMemory` file |
+
+## Memory file
+
+`DeepseekMemory` (plain UTF-8 text, in the configured directory) has two sections:
+
+```
+# ===== 对主人的了解（稳定事实）=====
+- 我叫小明
+# ===== 互动记录 =====
+[08-16 14:23] 主人: … → 女仆: …
+```
+
+Only real interactions are recorded (direct user messages with `source.kind === "user"`); nothing is fabricated. Facts are extracted conservatively and deduplicated.
+
+## License
+
+MIT. The whale-girl maid character is a community derivative of the OC "溟月" (by 上善, redesigned with DeepSeek elements by ZipZipPipe) — if you ship artwork based on it, please honor CC BY-NC-SA 4.0 (attribution chain: 上善 → ZipZipPipe → this project). No artwork is bundled with this plugin.

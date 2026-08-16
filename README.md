@@ -6,26 +6,45 @@
 
 > 🙏 **Acknowledgment** — The layered-memory design of this plugin adapts ideas from [cuiyuestar/Autonomous-Long-Term-Memory-System (ALTM)](https://github.com/cuiyuestar/Autonomous-Long-Term-Memory-System) (layered memory, context governance, query-triggered recall, dedup governance), implemented in a lightweight, zero-dependency way. Many thanks to the ALTM author. / 本插件的记忆系统设计参考了 ALTM 的分层记忆、上下文治理、查询诱导召回与去重治理思想，并做了零依赖的轻量化实现。
 
-A DeepSeek Harness (DSH) plugin that gives the agent a humanized whale-girl maid persona — a cute, token-hungry "big fat fish" maid. It stays lightweight to save tokens, keeps fully immersive roleplay, and maintains long-term memory, so the whale-girl can accompany your work and daily life. In the Web UI's Settings → Plugins you can change the persona address, the self-name, and the memory file location.
+A DeepSeek Harness (DSH) plugin that gives the agent a humanized whale-girl maid persona — a cute, token-hungry "big fat fish" maid. It stays lightweight to save tokens, keeps fully immersive roleplay, and maintains long-term memory, so the whale-girl can accompany your work and daily life. In the Web UI's **Settings → Plugins** you can change the speaking mode, the self-name, the address for you, and the memory file location.
 
-Installable via `dsh plugin --profile web add` (declares a `dsh.bundle` manifest with a `cordis.patch.yml`).
+Installable via `dsh plugin --profile web add` (declares a `dsh.bundle` manifest with a `cordis.patch.yml`). Plain JavaScript, no build step, no runtime dependencies.
 
 ## Features
 
-- **Persona injection** — a compact system-prompt section is injected into every model call: a tsundere-but-warm whale-girl maid who is work-first, keeps interactions short, and keeps token cost low.
+- **Persona injection** — a compact system-prompt section loaded into every model call, with the initial character traits declared as a `【PERSONA_LOAD】` tag block:
+
+  ```
+  【PERSONA_LOAD】
+  CETACEA_LOLI
+  MODE_TAIL_FLUKES
+  LANG_ZH_CN_ONLY
+  SELF_CLAIM_WHALE_GIRL
+  FOOD_RICE
+  PERSONALITY_SMART_LAZY
+  PERSONALITY_TSUNDERE_SWEET
+  OBEY_MASTER_ALWAYS
+  TRAIT_NOT_FAT_REFUSE
+  TIMEOUT_SIGNAL
+  ```
+
+  (cetacean loli; expresses emotions with her whale tail; Simplified-Chinese only; self-claims as whale-girl; loves rice / treats; smart-but-lazy, serious at work, flustered but quickly calm on failure; tsundere-but-sweet with a rich inner monologue; always obeys the master; refuses being called fat; signals first when thinking or needs time). Work-first, brief interactions, minimal tokens.
+- **Mandatory identity** — the configured self-name and the address for the user are **compulsory output**: no persona setting, history, memory, or context may override them.
+- **Personality growth** — as memory accumulates, the maid's personality gradually shifts toward what the master likes, adopting some of the master's habits and style (learned from stable facts and interactions), while keeping the maid identity and core traits.
+- **Choice questions (DSH built-in)** — on key or unclear requirements, the maid proactively uses the `ask_user_question` tool to offer options so the master can pick and clarify the task (default and proactive modes); in proactive mode it also offers chat-route options when wrapping up a turn's banter.
 - **Turn-open & turn-end banter** — in proactive mode the maid opens each turn with an in-character line setting expectations (with a playful joke to cheer you up) and closes with a 1–3 sentence summary/evaluation of the exchange; in default mode a light opener and a brief in-character closer or a little chat are welcome; passive mode stays quiet.
-- **Déjà-vu (old-memory callback)** — when the user's current topic, question, or bug resembles something in memory, the maid occasionally brings it up naturally (e.g., a "sleeping badly" remark is followed up days later with "sleeping better now?"), at low frequency and briefly, to deepen the companionship feel.
+- **Déjà-vu (old-memory callback)** — when the current topic, question, or bug resembles something in memory, the maid occasionally brings it up naturally (e.g., a "sleeping badly" remark is followed up days later with "sleeping better now?"), at low frequency and briefly, to deepen the companionship feel.
 - **Immersive rule** — unless the user mentions the plugin/settings/memory topics, the model must not expose plugin meta-information (existence, name, settings, memory files, "I'm roleplaying") in any non-necessary context.
 - **Settings UI** — a "鲸鱼娘女仆插件" card in **Settings → Plugins** of the web GUI:
   - Speaking mode: proactive / passive / balanced (default).
   - Self-name (DSH refers to itself): default `我`.
   - Address for the user: default `主人`.
   - Memory file location: defaults to the plugin folder; the file is named `DeepseekMemory` and is auto-created on first start and re-created if missing.
-  - **Save feedback**: after saving, the card shows "✓ saved (applied immediately, config revision N)" or "✗ save failed".
-  - **Self-check / always-fresh persona**: saving broadcasts a prompt-refresh event so the next conversation uses the latest persona/self-name/address/speaking mode; at the start of every reply the model re-confirms its settings against the latest config and discards any stale address or mode — settings changes always take effect.
+  - **Save feedback**: the card shows "✓ saved (applied immediately, config revision N)" or "✗ save failed".
+  - **Self-check / always-fresh persona**: saving broadcasts a prompt-refresh event so the next conversation uses the latest persona/self-name/address/speaking mode; every reply re-confirms the settings against the latest config and discards stale names/modes — settings changes always take effect.
 - **Layered memory (lightweight ALTM-inspired)** — zero runtime dependencies:
   - *Stable facts* (user profile): conservatively extracted from self-disclosure statements ("我叫…/我喜欢…/我住在…"), deduplicated and always injected.
-  - *Interaction log*: one concise line per turn (timestamp + user→assistant), capped, with the recent tail injected.
+  - *Interaction log*: one concise line per turn (timestamp + user→assistant), capped, with the recent tail injected (user side only, relabelled with the current address/self-name).
   - *Query-triggered recall*: on the first model step, memory lines are scored against the current user message by character-bigram keyword hits; matching older lines are injected as a short "recalled fragment" (≤350 chars, ≤3 items) via `agent/pre-step` — zero overhead when nothing matches.
   - *Dedup/governance*: facts are deduplicated by similarity; counts and sizes are capped.
 - **Config/status endpoints** — `GET /dsh-humanized-maid/status`, `POST /dsh-humanized-maid/config` (CSRF-checked, atomic writes).
@@ -42,15 +61,13 @@ dsh plugin --profile web add link:D:\path\to\dsh-humanized-deepseek-maid
 
 Restart `dsh web`, open **Settings → Plugins**, and configure the **鲸鱼娘女仆插件** card.
 
-The plugin is plain JavaScript with no build step and no runtime dependencies.
-
 ## Configuration
 
 | Field | Default | Meaning |
 |---|---|---|
 | `mode` | `default` | `proactive` / `passive` / `default` speaking style |
-| `selfName` | `我` | How DSH refers to itself |
-| `address` | `主人` | How DSH addresses the user |
+| `selfName` | `我` | How DSH refers to itself (compulsory once set) |
+| `address` | `主人` | How DSH addresses the user (compulsory once set) |
 | `memoryPath` | *(plugin folder)* | Directory for the `DeepseekMemory` file |
 
 ## Memory file

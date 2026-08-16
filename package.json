@@ -1,6 +1,6 @@
 {
   "name": "dsh-humanized-deepseek-maid",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Gives the DeepSeek Harness agent a configurable humanized whale-girl maid persona (address, self-name, speaking mode), an immersive no-plugin-meta rule, and a lightweight layered memory with query-triggered recall.",
   "main": "lib/index.mjs",

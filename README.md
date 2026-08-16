@@ -11,12 +11,16 @@ Installable via `dsh plugin --profile web add` (declares a `dsh.bundle` manifest
 ## Features
 
 - **Persona injection** — a compact system-prompt section is injected into every model call: a tsundere-but-warm whale-girl maid who is work-first, keeps interactions short, and keeps token cost low.
+- **Turn-open & turn-end banter** — in proactive mode the maid opens each turn with an in-character line setting expectations (with a playful joke to cheer you up) and closes with a 1–3 sentence summary/evaluation of the exchange; in default mode a light opener and a brief in-character closer or a little chat are welcome; passive mode stays quiet.
+- **Déjà-vu (old-memory callback)** — when the user's current topic, question, or bug resembles something in memory, the maid occasionally brings it up naturally (e.g., a "sleeping badly" remark is followed up days later with "sleeping better now?"), at low frequency and briefly, to deepen the companionship feel.
 - **Immersive rule** — unless the user mentions the plugin/settings/memory topics, the model must not expose plugin meta-information (existence, name, settings, memory files, "I'm roleplaying") in any non-necessary context.
 - **Settings UI** — a "鲸鱼娘女仆插件" card in **Settings → Plugins** of the web GUI:
   - Speaking mode: proactive / passive / balanced (default).
   - Self-name (DSH refers to itself): default `我`.
   - Address for the user: default `主人`.
   - Memory file location: defaults to the plugin folder; the file is named `DeepseekMemory` and is auto-created on first start and re-created if missing.
+  - **Save feedback**: after saving, the card shows "✓ saved (applied immediately, config revision N)" or "✗ save failed".
+  - **Self-check / always-fresh persona**: saving broadcasts a prompt-refresh event so the next conversation uses the latest persona/self-name/address/speaking mode; at the start of every reply the model re-confirms its settings against the latest config and discards any stale address or mode — settings changes always take effect.
 - **Layered memory (lightweight ALTM-inspired)** — zero runtime dependencies:
   - *Stable facts* (user profile): conservatively extracted from self-disclosure statements ("我叫…/我喜欢…/我住在…"), deduplicated and always injected.
   - *Interaction log*: one concise line per turn (timestamp + user→assistant), capped, with the recent tail injected.
@@ -59,6 +63,8 @@ The plugin is plain JavaScript with no build step and no runtime dependencies.
 ```
 
 Only real interactions are recorded (direct user messages with `source.kind === "user"`); nothing is fabricated. Facts are extracted conservatively and deduplicated.
+
+> Memory scope is **global**: all workspaces and sessions share the same `DeepseekMemory` file (in the configured memory directory, defaulting to the plugin folder). To isolate memory per workspace/session, point `memoryPath` at different directories.
 
 ## Acknowledgments
 

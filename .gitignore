@@ -1,0 +1,9 @@
+# Runtime artifacts — never commit these
+config.json
+DeepseekMemory
+runtime.log
+*.tmp
+
+# Dependencies / build
+node_modules/
+*.log
